@@ -17,12 +17,16 @@ Usage of ssp (depends on sshpaas):
 
 ssp [options] [host]
 Options:
-  -host string
+ -host string
      SSH host to connect (e.g., ssp -host node1)
   -hostname string
      SSH hostname to connect (e.g., ssp -hostname 127.0.0.1)
-    -list
+  -list
      List cached hosts (e.g., ssp -list)
+  -del
+     Delete cached record by indes of -list (e.g., ssp -del 0)
+  index
+     Use inde of '-list' reusult to login  (e.g., ssp 2, meaning use 2nd host in cache )
   host/hostname
      Same as -host -hostname, but needn`t '-' (e.g., ssp node1 or ssp 127.0.0.1 )
   user@hostname

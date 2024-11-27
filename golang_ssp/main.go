@@ -8,6 +8,7 @@ import (
 	"golang_ssp/golang_ssp/internal/ssh"
 	"golang_ssp/golang_ssp/pkg/logger"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 )
@@ -20,6 +21,7 @@ var (
 	hostnameOpt = flag.String("hostname", "", "SSH hostname to connect")
 	// ssp -list
 	listOpt = flag.Bool("list", false, "List cached hosts")
+	delOpt  = flag.String("del", "", "Delete cached record by indes of -list ")
 )
 
 func ParseArgs() (string, map[string]interface{}) {
@@ -37,12 +39,14 @@ func ParseArgs() (string, map[string]interface{}) {
 		fmt.Fprintf(flag.CommandLine.Output(), "     SSH hostname to connect (e.g., ssp -hostname 127.0.0.1)\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  -list\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "     List cached hosts (e.g., ssp -list)\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  -del\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "     Delete cached record by indes of -list (e.g., ssp -del 0)\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  index\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "     Use inde of '-list' reusult to login  (e.g., ssp 2, meaning use 2nd host in cache )\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  host/hostname\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "     Same as -host -hostname, but needn`t '-' (e.g., ssp node1 or ssp 127.0.0.1 )\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  user@hostname\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "     Like ssh command (e.g., ssp root@127.0.0.1 )\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  index\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "     Use inde of '-list' reusult to login  (e.g., ssp 2, meaning use 2nd host in cache )\n")
 	}
 
 	flag.Parse()
@@ -52,6 +56,17 @@ func ParseArgs() (string, map[string]interface{}) {
 	if *listOpt {
 		data["config"] = &config.SSHConfig{}
 		return "list", data
+	}
+
+	if *delOpt != "" {
+
+		if !isInt(*delOpt) {
+			fmt.Println("Invalid format del argument. Expected number")
+			os.Exit(1)
+		}
+		data["config"] = &config.SSHConfig{}
+		data["index"] = *delOpt
+		return "del", data
 	}
 
 	if *hostOpt != "" {
@@ -102,6 +117,7 @@ func isInt(s string) bool {
 }
 
 func ReadInput(cfg *config.SSHConfig) *config.SSHConfig {
+	// fmt.Println(cfg)
 
 	if cfg == nil {
 		cfg = &config.SSHConfig{}
@@ -165,7 +181,17 @@ func ReadInput(cfg *config.SSHConfig) *config.SSHConfig {
 
 }
 
+func printPanic() {
+	if r := recover(); r != nil {
+		// 获取触发 panic 的调用信息
+		fmt.Printf("Panic recovered: %v\n", r)
+		fmt.Println("Stack trace:")
+		fmt.Println(string(debug.Stack()))
+	}
+}
+
 func main() {
+	defer printPanic()
 	logger.Logger.Println("ssp start!")
 	model, data := ParseArgs()
 	inputCfg := data["config"].(*config.SSHConfig)
@@ -189,10 +215,9 @@ func main() {
 		}
 
 		cfg, err := config.GetSSHConfig(cfgs, inputCfg)
-		// 从命令行获取配置
 		if err != nil {
-
-			cfg = ReadInput(cfg)
+			// 获取不到配置
+			cfg = ReadInput(inputCfg)
 			if cfg == nil {
 				fmt.Printf("Error getting SSH config: %v\n", err)
 				panic("Invalid number of arguments.")
@@ -206,12 +231,23 @@ func main() {
 		index, _ := strconv.Atoi(data["index"].(string))
 
 		if index < 0 || index >= len(*cfgs) {
-			fmt.Printf("Invalid index: %d\n", index)
+			fmt.Printf("Invalid index, out of range: %d\n", index)
+			os.Exit(1)
 		}
 
 		cfg := (*cfgs)[index]
 
 		ssh.Login(&cfg, cfgs, cacheConfigPath)
+
+	case "del":
+		index, _ := strconv.Atoi(data["index"].(string))
+		if index < 0 || index >= len(*cfgs) {
+			fmt.Printf("Invalid index: out of range %d\n", index)
+			os.Exit(1)
+		}
+		*cfgs = append((*cfgs)[:index], (*cfgs)[index+1:]...)
+
+		config.WriteConfig(cacheConfigPath, *cfgs)
 
 	}
 
