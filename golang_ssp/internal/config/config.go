@@ -220,7 +220,7 @@ func ListConfigs(configs []SSHConfig) {
 		return
 	}
 	for i, config := range configs {
-		fmt.Printf("%-4d%-15s%-15s%-15s%-15s%-15s%-15s\n", i, config.Host, config.Hostname, config.User, config.Port, config.LoginTimes, config.LastLoginTime)
+		fmt.Printf("%-4d%-25s%-15s%-15s%-15s%-15s%-15s\n", i, config.Host, config.Hostname, config.User, config.Port, config.LoginTimes, config.LastLoginTime)
 		if i > 20 {
 			break
 		}

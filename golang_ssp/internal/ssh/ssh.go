@@ -24,7 +24,11 @@ func Login(cfg *config.SSHConfig, cfgs *[]config.SSHConfig, configPath string, c
 		os.Exit(1)
 	}
 
-	args := []string{"sshpass", "-p", cfg.Password, cmd, "-P", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname)}
+	args := []string{"sshpass", "-p", cfg.Password, cmd, "-p", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname)}
+	if cmd == "sftp" {
+		args = []string{"sshpass", "-p", cfg.Password, cmd, "-P", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname)}
+	}
+
 	fmt.Println(args)
 	err = syscall.Exec(binary, args, os.Environ())
 	if err != nil {
