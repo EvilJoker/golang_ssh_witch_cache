@@ -14,7 +14,7 @@ import (
 )
 
 var cacheConfigPath = "~/.ssh/config_cache"
-
+var CMD = "ssh"
 var (
 	hostOpt = flag.String("host", "", "SSH host to connect")
 	// ssp -hostOpt ip/hostname
@@ -27,11 +27,11 @@ var (
 func ParseArgs() (string, map[string]interface{}) {
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage of ssp (depends on sshpaas):\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of ssp/ssftp (depends on sshpaas):\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  Description:\n")
 		fmt.Fprintf(flag.CommandLine.Output(), `    ssp could simplify ssh login that auto compleled info by finding and caching ssh record,
     all record cache in ~/.ssh/config_cache`)
-		fmt.Fprintf(flag.CommandLine.Output(), "\n\nssp [options] [host]\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "\n\nssp/ssftp [options] [host]\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  -host string\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "     SSH host to connect (e.g., ssp -host node1)\n")
@@ -80,6 +80,12 @@ func ParseArgs() (string, map[string]interface{}) {
 	}
 	// 检查是否有非标志参数
 	args := flag.Args()
+
+	if strings.Contains(os.Args[0], "sftp") {
+		fmt.Println(os.Args)
+		CMD = "sftp"
+	}
+
 	if len(args) > 0 {
 		// 解析非标志参数
 		if strings.Contains(args[0], "@") {
@@ -225,7 +231,7 @@ func main() {
 			fmt.Println(cfg)
 		}
 
-		ssh.Login(cfg, cfgs, cacheConfigPath)
+		ssh.Login(cfg, cfgs, cacheConfigPath, CMD)
 	case "index":
 
 		index, _ := strconv.Atoi(data["index"].(string))
@@ -237,7 +243,7 @@ func main() {
 
 		cfg := (*cfgs)[index]
 
-		ssh.Login(&cfg, cfgs, cacheConfigPath)
+		ssh.Login(&cfg, cfgs, cacheConfigPath, CMD)
 
 	case "del":
 		index, _ := strconv.Atoi(data["index"].(string))

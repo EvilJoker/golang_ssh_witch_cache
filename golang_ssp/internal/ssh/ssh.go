@@ -9,7 +9,7 @@ import (
 	"syscall"
 )
 
-func Login(cfg *config.SSHConfig, cfgs *[]config.SSHConfig, configPath string) {
+func Login(cfg *config.SSHConfig, cfgs *[]config.SSHConfig, configPath string, cmd string) {
 
 	ret := checkConnection(cfg)
 	if !ret {
@@ -24,7 +24,8 @@ func Login(cfg *config.SSHConfig, cfgs *[]config.SSHConfig, configPath string) {
 		os.Exit(1)
 	}
 
-	args := []string{"sshpass", "-p", cfg.Password, "ssh", "-p", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname)}
+	args := []string{"sshpass", "-p", cfg.Password, cmd, "-P", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname)}
+	fmt.Println(args)
 	err = syscall.Exec(binary, args, os.Environ())
 	if err != nil {
 		fmt.Printf("Error executing sshpass: %v\n", err)
@@ -78,7 +79,6 @@ func checkConnection(cfg *config.SSHConfig) bool {
 
 	// 尝试连接测试
 	testCmd := exec.Command("sshpass", "-p", cfg.Password, "ssh", "-p", cfg.Port, fmt.Sprintf("%s@%s", cfg.User, cfg.Hostname), "true")
-	fmt.Println(testCmd.String())
 	testCmd.Stderr = &testErr
 
 	if err := testCmd.Run(); err != nil {

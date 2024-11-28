@@ -10,12 +10,14 @@ ssh 登录需要手动输入密码，也无法记录登录过的主机。使用�
 
 ## 使用方式说明 ssp -help
 
-Usage of ssp (depends on sshpaas):
+使用 goinstall.sh 安装 --> ssp, ssftp
+
+Usage of ssp or ssftp (depends on sshpaas):
   Description:
     ssp could simplify ssh login that auto compleled info by finding and caching ssh record,
     all record cache in ~/.ssh/config_cache
 
-ssp [options] [host]
+ssp/ssftp [options] [host]
 Options:
  -host string
      SSH host to connect (e.g., ssp -host node1)
