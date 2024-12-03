@@ -131,16 +131,23 @@ func ReadInput(cfg *config.SSHConfig) *config.SSHConfig {
 	reader := bufio.NewReader(os.Stdin)
 
 	if cfg.Host == "" {
-		fmt.Print("Enter Host Like \"node1\": ")
+		if cfg.Hostname != "" {
+			fmt.Print("Enter Host Like \"node1\" (default " + cfg.Hostname + "): ")
+		} else {
+			fmt.Print("Enter Host Like \"node1\": ")
+		}
 		host, _ := reader.ReadString('\n')
 		cfg.Host = strings.TrimSpace(host)
 
 		if cfg.Host == "" {
-			fmt.Println("Host cannot be empty.")
-			os.Exit(1)
+			if cfg.Hostname != "" {
+				cfg.Host = cfg.Hostname
+			} else {
+				fmt.Println("Host cannot be empty.")
+				os.Exit(1)
+			}
 		}
 	}
-
 	if cfg.Hostname == "" {
 		fmt.Print("Enter Hostname Like \"127.0.0.1\": ")
 		hostname, _ := reader.ReadString('\n')
